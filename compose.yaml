@@ -1,0 +1,19 @@
+services:
+  api:
+    build:
+      context: ./go_server
+    image: refactoring-user-api:local
+    ports:
+      - "${BIND_ADDRESS:-127.0.0.1}:${PORT:-8080}:8080"
+    volumes:
+      - users_data:/data
+    restart: unless-stopped
+    read_only: true
+    security_opt:
+      - no-new-privileges:true
+    cap_drop:
+      - ALL
+    stop_grace_period: 15s
+
+volumes:
+  users_data:

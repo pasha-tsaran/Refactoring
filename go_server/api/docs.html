@@ -1,0 +1,18 @@
+<!doctype html>
+<html lang="ru">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>User API — документация</title>
+<style>body{font:18px/1.6 system-ui;max-width:900px;margin:40px auto;padding:0 20px}code{background:#eee;padding:3px}table{border-collapse:collapse;width:100%}td,th{border:1px solid #ddd;padding:10px;text-align:left}</style>
+<h1>User API</h1>
+<p>Контракт OpenAPI 3.1: <a href="/openapi.yaml">YAML</a> · <a href="/openapi.json">JSON</a>. Импортируйте файл в Swagger Editor, Postman или Insomnia. Эта страница работает без внешних ресурсов.</p>
+<table><tr><th>Метод и путь</th><th>Действие</th></tr>
+<tr><td>GET /health</td><td>Проверить HTTP и SQLite</td></tr>
+<tr><td>POST /adduser</td><td>Создать: {"name":"Анна","tags":["student"]}</td></tr>
+<tr><td>POST /adducer</td><td>Устаревший совместимый путь создания</td></tr>
+<tr><td>GET /user/{id}</td><td>Получить пользователя</td></tr>
+<tr><td>GET, POST /activate/{id}</td><td>Активировать существующего пользователя</td></tr>
+<tr><td>GET /slow</td><td>Запланировать фоновую задачу: 202; при занятости: 503</td></tr>
+<tr><td>GET /wrong</td><td>Учебный маршрут: ожидаемый ответ 500</td></tr></table>
+<p>Список активности хранится в памяти одного процесса (до 50 уникальных ID). Пользователи и хеши паролей хранятся в SQLite. Авторизации в учебном API нет; для внешнего доступа используйте защищённый шлюз.</p>
+</html>

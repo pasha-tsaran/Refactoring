@@ -1,0 +1,11 @@
+{
+  "go": {
+    "live_contract_responses": 8,
+    "parallel_create_and_activate": 24,
+    "restart_persistence": "passed"
+  },
+  "python": {
+    "live_contract_responses": 8,
+    "parallel_create_and_activate": 24
+  }
+}

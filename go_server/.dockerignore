@@ -1,0 +1,6 @@
+.git
+data
+bin
+*.db*
+*.exe
+*.out

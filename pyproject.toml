@@ -1,0 +1,11 @@
+[tool.pytest.ini_options]
+testpaths = ["python_server/tests", "tests"]
+pythonpath = ["python_server"]
+
+[tool.ruff]
+line-length = 79
+target-version = "py312"
+exclude = ["originals"]
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "N", "W", "B"]

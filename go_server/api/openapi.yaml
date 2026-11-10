@@ -1,0 +1,408 @@
+openapi: 3.1.0
+jsonSchemaDialect: https://json-schema.org/draft/2020-12/schema
+info:
+  title: Refactoring User API
+  version: 1.0.0
+  description: 'Учебный API без авторизации. Активность хранится в памяти процесса,
+    до 50 уникальных ID. Пользователи сохраняются в SQLite. GET /activate меняет состояние
+    для совместимости; предпочитайте POST. Неизвестный путь: 404 JSON Error. Неподдерживаемый
+    метод: 405 JSON Error и заголовок Allow. Для GET также доступен HEAD без тела
+    ответа.'
+servers:
+- url: http://localhost:8080
+paths:
+  /health:
+    get:
+      summary: Проверить HTTP и БД
+      operationId: health
+      responses:
+        '200':
+          description: Сервис доступен
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StatusResponse'
+        '405':
+          description: Ошибка запроса или сервера
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '500':
+          description: Ошибка запроса или сервера
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+  /adduser:
+    post:
+      summary: Создать пользователя
+      operationId: addUser
+      responses: &id001
+        '201':
+          description: Пользователь создан
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AddUserResponse'
+        '400':
+          description: Некорректный запрос
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '413':
+          description: Некорректный запрос
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '415':
+          description: Некорректный запрос
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '405':
+          description: Ошибка запроса или сервера
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '500':
+          description: Ошибка запроса или сервера
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+      requestBody: &id002
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AddUserRequest'
+            example:
+              name: Анна
+              tags:
+              - student
+  /adducer:
+    post:
+      summary: Совместимость с опечаткой в исходном API
+      operationId: addUserLegacy
+      responses: *id001
+      requestBody: *id002
+      deprecated: true
+  /user/{id}:
+    parameters:
+    - &id003
+      name: id
+      in: path
+      required: true
+      schema: &id005
+        type: integer
+        format: int64
+        minimum: 1
+        maximum: 9223372036854775807
+    get:
+      summary: Получить пользователя
+      operationId: getUser
+      responses:
+        '200':
+          description: Пользователь
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/User'
+        '400':
+          description: Некорректный ID
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '404':
+          description: Пользователь отсутствует
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '405':
+          description: Ошибка запроса или сервера
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '500':
+          description: Ошибка запроса или сервера
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+  /activate/{id}:
+    parameters:
+    - *id003
+    get:
+      summary: Активировать пользователя
+      operationId: activateUserLegacy
+      responses: &id004
+        '200':
+          description: Активность обновлена
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ActivateResponse'
+        '400':
+          description: Некорректный ID
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '404':
+          description: Пользователь отсутствует
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '405':
+          description: Ошибка запроса или сервера
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '500':
+          description: Ошибка запроса или сервера
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+      deprecated: true
+    post:
+      summary: Активировать пользователя
+      operationId: activateUser
+      responses: *id004
+  /slow:
+    get:
+      summary: Запустить фоновую задачу
+      operationId: runSlowTask
+      responses:
+        '202':
+          description: Задача принята без гарантии завершения
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ScheduledResponse'
+        '503':
+          description: Оба исполнителя заняты
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+          headers:
+            Retry-After:
+              schema:
+                type: string
+                const: '1'
+              description: Повторите запрос через секунду
+        '405':
+          description: Ошибка запроса или сервера
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '500':
+          description: Ошибка запроса или сервера
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+  /wrong:
+    get:
+      summary: Учебный пример ответа 500
+      operationId: wrongExample
+      responses:
+        '500':
+          description: Ожидаемая учебная ошибка
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DemoError'
+        '405':
+          description: Ошибка запроса или сервера
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+  /openapi.json:
+    get:
+      summary: Получить документацию
+      operationId: openapi_json
+      responses:
+        '200':
+          description: Документация
+          content:
+            application/json:
+              schema:
+                type: object
+        '405':
+          description: Ошибка запроса или сервера
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '500':
+          description: Ошибка запроса или сервера
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+  /openapi.yaml:
+    get:
+      summary: Получить документацию
+      operationId: openapi_yaml
+      responses:
+        '200':
+          description: Документация
+          content:
+            application/yaml:
+              schema:
+                type: string
+        '405':
+          description: Ошибка запроса или сервера
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '500':
+          description: Ошибка запроса или сервера
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+  /docs:
+    get:
+      summary: Получить документацию
+      operationId: docs
+      responses:
+        '200':
+          description: Документация
+          content:
+            text/html:
+              schema:
+                type: string
+        '405':
+          description: Ошибка запроса или сервера
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '500':
+          description: Ошибка запроса или сервера
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+components:
+  schemas:
+    User:
+      type: object
+      required:
+      - id
+      - name
+      - tags
+      additionalProperties: false
+      properties:
+        id: *id005
+        name: &id006
+          type: string
+          minLength: 1
+          maxLength: 100
+          pattern: ^[^\u0000-\u001f]*\S[^\u0000-\u001f]*$
+        tags: &id008
+          type: array
+          maxItems: 21
+          items: &id007
+            type: string
+            minLength: 1
+            maxLength: 30
+            pattern: ^[^\u0000-\u001f]*\S[^\u0000-\u001f]*$
+    AddUserRequest:
+      type: object
+      required:
+      - name
+      additionalProperties: false
+      properties:
+        name: *id006
+        tags:
+          type: array
+          maxItems: 20
+          items: *id007
+    AddUserResponse:
+      type: object
+      required:
+      - status
+      - id
+      - name
+      - tags
+      additionalProperties: false
+      properties:
+        id: *id005
+        name: *id006
+        tags: *id008
+        status:
+          type: string
+          const: ok
+    StatusResponse:
+      type: object
+      required:
+      - status
+      additionalProperties: false
+      properties:
+        status:
+          type: string
+          const: ok
+    ScheduledResponse:
+      type: object
+      required:
+      - status
+      additionalProperties: false
+      properties:
+        status:
+          type: string
+          const: scheduled
+    ActivateResponse:
+      type: object
+      required:
+      - status
+      - active
+      additionalProperties: false
+      properties:
+        status:
+          type: string
+          const: ok
+        active:
+          type: array
+          maxItems: 50
+          uniqueItems: true
+          items: *id005
+    Error:
+      type: object
+      required:
+      - error
+      additionalProperties: false
+      properties:
+        error:
+          type: string
+        detail:
+          type: string
+    DemoError:
+      type: object
+      required:
+      - msg
+      - detail
+      additionalProperties: false
+      properties:
+        msg:
+          type: string
+          const: error
+        detail:
+          type: string
+          const: division by zero

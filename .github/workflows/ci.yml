@@ -1,0 +1,47 @@
+name: Verify API
+
+on:
+  push:
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  python:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+      - run: python -m pip install -r requirements-dev.txt
+      - run: ruff check . && ruff format --check .
+      - run: python -m pytest -q
+
+  go-and-docker:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      # Building the final image also runs gofmt, go vet and go test -race.
+      - run: docker build -t refactoring-user-api:ci ./go_server
+      - run: docker compose config --quiet
+      - name: Start and verify container
+        shell: bash
+        run: |
+          docker run -d --name user-api-ci -p 127.0.0.1:8080:8080 refactoring-user-api:ci
+          for attempt in {1..30}; do
+            if docker exec user-api-ci /server -healthcheck; then break; fi
+            echo "Waiting for service ($attempt/30)"
+            sleep 1
+          done
+          docker exec user-api-ci /server -healthcheck
+          python scripts/test_endpoints.py
+      - if: always()
+        run: docker logs user-api-ci 2>/dev/null || true
+      - if: always()
+        run: docker rm -f -v user-api-ci 2>/dev/null || true
